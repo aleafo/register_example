@@ -1,0 +1,47 @@
+# 多线程示例 2022-01-07
+import time
+import threading
+import pythoncom
+from ctypes import windll
+from win32com.client import Dispatch
+
+
+def freecom() -> object:
+    try:
+        dm = Dispatch('dm.dmsoft')
+        print('正常注册,当前OP版本为-->{}'.format(dm.Ver()))
+    except:
+        try:
+            REG_32 = r'C:\freeCOM\DmReg.dll'
+            DM_DLL = r'C:\freeCOM\dm.dll'
+            freecom = windll.LoadLibrary(REG_32)
+            freecom.SetDllPathW(DM_DLL, 1)
+            dm = Dispatch('dm.dmsoft')
+            print(f'免注册调用成功,版本号为{dm.ver()}')
+        except:
+            exit(print('注册失败'))
+        else:
+            return dm
+    else:
+        return dm
+
+def main():
+    pythoncom.CoInitializeEx(0)
+    dmm = freecom()
+    for i in range(10):
+        print(f'main: {dmm.GetID()}')
+        time.sleep(0.5)
+
+def minor():
+    pythoncom.CoInitializeEx(0)
+    dmm = freecom()
+    for i in range(10):
+        print(f'minor: {dmm.GetID()}')
+        time.sleep(0.5)
+
+if __name__ == '__main__':
+    t1 = threading.Thread(target=main)
+    t2 = threading.Thread(target=minor)
+    t1.start()
+    time.sleep(2)
+    t2.start()
